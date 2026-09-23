@@ -1,0 +1,428 @@
+<div class="layout-container">
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon"><img src="favicon.svg" alt="Logo"></div>
+      <div class="brand-text">
+        <h1>SQLShield AI</h1>
+        <p class="subtitle">Next-Gen Machine Learning SQL Injection Detection & Threat Analyzer</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-tech">Angular 22</span>
+      <span class="badge badge-tech">ASP.NET Core 10</span>
+      <span class="badge badge-tech">FastAPI & Scikit-Learn</span>
+    </div>
+  </header>
+
+  <main class="dashboard-grid">
+    <!-- Left Column: Input and Sample Inspector -->
+    <section class="card input-section">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">🔍</span>
+          <h2>SQL Query Inspector</h2>
+        </div>
+        <span class="badge badge-info">{{ charCount() }} chars</span>
+      </div>
+
+      <!-- Quick Preset Chips -->
+      <div class="presets-container">
+        <span class="presets-label">Quick Test Payloads:</span>
+        <div class="preset-chips">
+          <button 
+            *ngFor="let p of presets" 
+            type="button"
+            class="chip-btn" 
+            [class.chip-malicious]="p.category === 'malicious'"
+            [class.chip-benign]="p.category === 'benign'"
+            (click)="setPreset(p.sql)"
+            [title]="p.sql">
+            <span class="chip-dot"></span>
+            {{ p.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Textarea Input Form -->
+      <div class="input-group">
+        <textarea 
+          [ngModel]="queryInput()" 
+          (ngModelChange)="queryInput.set($event)"
+          placeholder="Paste or type a SQL query, web parameter, or authentication payload here..."
+          rows="5"
+          spellcheck="false"
+          class="query-textarea"></textarea>
+      </div>
+
+      <!-- Actions Toolbar -->
+      <div class="action-toolbar">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="clearInput()"
+          [disabled]="!hasQuery() && !currentResult()">
+          Clear
+        </button>
+
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          [disabled]="!hasQuery() || isLoading()"
+          (click)="analyzeQuery()">
+          <span *ngIf="isLoading()" class="spinner"></span>
+          <span>{{ isLoading() ? 'Analyzing Neural Patterns...' : 'Analyze Threat Level' }}</span>
+        </button>
+      </div>
+
+      <!-- Error Message Banner -->
+      <div *ngIf="errorMessage()" class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-content">{{ errorMessage() }}</div>
+      </div>
+    </section>
+
+    <!-- Right Column: Live Detection Verdict -->
+    <section class="card verdict-section">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="icon">⚡</span>
+          <h2>Detection Verdict</h2>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!currentResult() && !isLoading()" class="verdict-placeholder">
+        <div class="empty-icon"><img src="favicon.svg" alt="Security Shield"></div>
+        <h3>No Query Analyzed Yet</h3>
+        <p>Enter a SQL string or click any quick sample above, then press <strong>Analyze Threat Level</strong> to inspect with the ML model.</p>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading()" class="verdict-loading">
+        <div class="radar-scan"></div>
+        <p>Extracting TF-IDF n-grams & Evaluating Machine Learning Classifier...</p>
+      </div>
+
+      <!-- Result State -->
+      <div *ngIf="currentResult() as res" class="verdict-result" [class.verdict-malicious]="res.isSqlInjection" [class.verdict-benign]="!res.isSqlInjection">
+        <div class="verdict-banner">
+          <div class="verdict-icon">{{ res.isSqlInjection ? '🚨' : '✅' }}</div>
+          <div class="verdict-details">
+            <span class="verdict-label">Classification Verdict</span>
+            <h3 class="verdict-title">{{ res.isSqlInjection ? 'MALICIOUS SQL INJECTION' : 'BENIGN / NORMAL QUERY' }}</h3>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-title">Model Confidence</span>
+            <span class="metric-value">{{ (res.confidence * 100).toFixed(1) }}%</span>
+            <div class="confidence-bar-bg">
+              <div 
+                class="confidence-bar-fill" 
+                [style.width.%]="res.confidence * 100"
+                [class.fill-danger]="res.isSqlInjection"
+                [class.fill-success]="!res.isSqlInjection"></div>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <span class="metric-title">Risk Assessment</span>
+            <span class="metric-value" [class.text-danger]="res.isSqlInjection" [class.text-success]="!res.isSqlInjection">
+              {{ res.isSqlInjection ? 'CRITICAL RISK' : 'LOW / SAFE' }}
+            </span>
+            <span class="metric-sub">{{ res.isSqlInjection ? 'Payload poses immediate injection threat' : 'Query adheres to normal syntax rules' }}</span>
+          </div>
+        </div>
+
+        <!-- Inspected Payload Display -->
+        <div class="payload-box">
+          <span class="payload-tag">Inspected Query</span>
+          <pre><code>{{ res.query }}</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Model Performance & Intelligence Section (model_comparison.csv + metrics.txt) -->
+  <section class="card reports-section" *ngIf="modelReports()?.available">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="icon">📊</span>
+        <h2>Machine Learning Intelligence & Evaluation</h2>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-winner">🏆 Active Model: {{ modelReports()?.best_model || 'Random Forest' }}</span>
+      </div>
+    </div>
+
+    <!-- Top KPI Highlights Row -->
+    <div class="kpi-grid" *ngIf="modelReports()?.evaluation as ev">
+      <div class="kpi-card">
+        <span class="kpi-label">Overall Accuracy</span>
+        <span class="kpi-value">{{ ((ev.accuracy || 0.9955) * 100).toFixed(2) }}%</span>
+        <span class="kpi-sub">On unseen test set</span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">F1-Score</span>
+        <span class="kpi-value text-cyan">{{ ((ev.f1 || 0.9938) * 100).toFixed(2) }}%</span>
+        <span class="kpi-sub">Harmonic Precision & Recall</span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">Inference Latency</span>
+        <span class="kpi-value text-emerald">{{ ev.avg_query_time_ms || '0.048ms' }}</span>
+        <span class="kpi-sub">Avg per SQL query</span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">False Positive Rate</span>
+        <span class="kpi-value text-emerald">{{ ((ev.fpr || 0.0013) * 100).toFixed(2) }}%</span>
+        <span class="kpi-sub">{{ ev.fp || 5 }} false alarms / {{ (ev.tn || 3901) + (ev.fp || 5) | number }}</span>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">Test Evaluation Set</span>
+        <span class="kpi-value">{{ (ev.test_samples || 6180) | number }}</span>
+        <span class="kpi-sub">Total verified queries</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="activeTab() === 'comparison'" 
+        (click)="setActiveTab('comparison')">
+        <span class="tab-icon">📊</span> Model Comparison (CSV)
+      </button>
+
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="activeTab() === 'matrix'" 
+        (click)="setActiveTab('matrix')">
+        <span class="tab-icon">🎯</span> Confusion Matrix & Metrics (TXT)
+      </button>
+
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="activeTab() === 'features'" 
+        (click)="setActiveTab('features')">
+        <span class="tab-icon">🧬</span> Top SQL Features
+      </button>
+
+      <button 
+        type="button" 
+        class="tab-btn" 
+        [class.active]="activeTab() === 'raw'" 
+        (click)="setActiveTab('raw')">
+        <span class="tab-icon">📄</span> Raw Evaluation Report
+      </button>
+    </div>
+
+    <!-- Tab 1: Model Comparison (from model_comparison.csv) -->
+    <div *ngIf="activeTab() === 'comparison'" class="tab-content">
+      <div class="table-responsive">
+        <table class="audit-table comparison-table">
+          <thead>
+            <tr>
+              <th>Model Architecture</th>
+              <th>Accuracy</th>
+              <th>Precision</th>
+              <th>Recall</th>
+              <th>F1-Score</th>
+              <th>ROC-AUC</th>
+              <th>FPR (False Alarm)</th>
+              <th>5-Fold CV F1</th>
+              <th>Train Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of modelReports()?.models" [class.highlight-row]="m.Model === 'Random Forest'">
+              <td class="model-name-cell">
+                <strong>{{ m.Model }}</strong>
+                <span *ngIf="m.Model === 'Random Forest'" class="winner-pill">Best Classifier</span>
+              </td>
+              <td><strong>{{ (m.Accuracy * 100).toFixed(2) }}%</strong></td>
+              <td>{{ (m.Precision * 100).toFixed(2) }}%</td>
+              <td>{{ (m.Recall * 100).toFixed(2) }}%</td>
+              <td>
+                <span class="score-pill">{{ (m.F1 * 100).toFixed(2) }}%</span>
+              </td>
+              <td>{{ (m['ROC-AUC'] * 100).toFixed(2) }}%</td>
+              <td class="text-emerald">{{ (m.FPR * 100).toFixed(2) }}%</td>
+              <td>
+                <strong>{{ (m['CV F1 Mean'] * 100).toFixed(2) }}%</strong>
+                <small class="text-muted"> (±{{ (m['CV F1 Std'] * 100).toFixed(1) }}%)</small>
+              </td>
+              <td class="time-col">{{ m['Train Time (s)'] }}s</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tab-footnote">
+        💡 <strong>Evaluation Note:</strong> 5-fold cross validation was evaluated across all 35k dataset samples. Random Forest achieved the top F1 score (97.15% CV) with the lowest false positive rate (0.13%).
+      </p>
+    </div>
+
+    <!-- Tab 2: Confusion Matrix & Breakdown (from metrics.txt) -->
+    <div *ngIf="activeTab() === 'matrix'" class="tab-content">
+      <div class="matrix-layout" *ngIf="modelReports()?.evaluation as ev">
+        <!-- 2x2 Visual Confusion Matrix Grid -->
+        <div class="matrix-grid-box">
+          <div class="matrix-header-title">Confusion Matrix Grid ({{ ev.test_samples | number }} Test Samples)</div>
+          
+          <div class="matrix-grid">
+            <div class="matrix-cell cell-tn">
+              <div class="cell-tag">True Negatives (TN)</div>
+              <div class="cell-num">{{ ev.tn | number }}</div>
+              <div class="cell-desc">Normal queries correctly allowed</div>
+            </div>
+
+            <div class="matrix-cell cell-fp">
+              <div class="cell-tag">False Positives (FP)</div>
+              <div class="cell-num">{{ ev.fp | number }}</div>
+              <div class="cell-desc">Normal queries flagged as SQLi (False Alarm)</div>
+            </div>
+
+            <div class="matrix-cell cell-fn">
+              <div class="cell-tag">False Negatives (FN)</div>
+              <div class="cell-num">{{ ev.fn | number }}</div>
+              <div class="cell-desc">SQLi attacks missed by model</div>
+            </div>
+
+            <div class="matrix-cell cell-tp">
+              <div class="cell-tag">True Positives (TP)</div>
+              <div class="cell-num">{{ ev.tp | number }}</div>
+              <div class="cell-desc">SQLi attacks successfully blocked</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Rates Summary Cards -->
+        <div class="rates-column">
+          <div class="rate-card">
+            <div class="rate-info">
+              <span class="rate-name">Precision (Purity)</span>
+              <span class="rate-val">{{ ((ev.precision || 0) * 100).toFixed(2) }}%</span>
+            </div>
+            <div class="rate-bar-bg"><div class="rate-bar-fill fill-cyan" [style.width.%]="(ev.precision || 0) * 100"></div></div>
+            <span class="rate-sub">When model predicts SQLi, it is correct 99.78% of the time.</span>
+          </div>
+
+          <div class="rate-card">
+            <div class="rate-info">
+              <span class="rate-name">Recall (Sensitivity)</span>
+              <span class="rate-val">{{ ((ev.recall || 0) * 100).toFixed(2) }}%</span>
+            </div>
+            <div class="rate-bar-bg"><div class="rate-bar-fill fill-emerald" [style.width.%]="(ev.recall || 0) * 100"></div></div>
+            <span class="rate-sub">Caught 2,251 out of 2,274 malicious attacks (98.99%).</span>
+          </div>
+
+          <div class="rate-card">
+            <div class="rate-info">
+              <span class="rate-name">ROC-AUC Score</span>
+              <span class="rate-val">{{ ((ev.roc_auc || 0) * 100).toFixed(2) }}%</span>
+            </div>
+            <div class="rate-bar-bg"><div class="rate-bar-fill fill-indigo" [style.width.%]="(ev.roc_auc || 0) * 100"></div></div>
+            <span class="rate-sub">Area under Receiver Operating Characteristic curve.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Top Detected Syntax Tokens (from feature_importance.txt) -->
+    <div *ngIf="activeTab() === 'features'" class="tab-content">
+      <p class="features-intro">
+        Top n-gram features learned by the Random Forest classifier. These SQL keywords, syntax operators, and quote delimiters carry the highest weights during classification:
+      </p>
+
+      <div class="features-grid">
+        <div *ngFor="let f of modelReports()?.top_features; let i = index" class="feature-item">
+          <div class="feature-rank">#{{ i + 1 }}</div>
+          <div class="feature-token"><code>{{ f.token }}</code></div>
+          <div class="feature-bar-wrap">
+            <div class="feature-bar" [style.width.%]="(f.importance / 0.075) * 100"></div>
+          </div>
+          <div class="feature-score">{{ (f.importance * 100).toFixed(2) }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Raw Terminal View (from metrics.txt) -->
+    <div *ngIf="activeTab() === 'raw'" class="tab-content">
+      <div class="terminal-box">
+        <div class="terminal-bar">
+          <span class="term-dot dot-red"></span>
+          <span class="term-dot dot-yellow"></span>
+          <span class="term-dot dot-green"></span>
+          <span class="term-title">outputs/reports/metrics.txt</span>
+        </div>
+        <pre class="terminal-body"><code>{{ modelReports()?.evaluation?.raw_text || 'No raw report loaded' }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom Section: Persistent Audit Log -->
+  <section class="card history-section">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="icon">📜</span>
+        <h2>Recent Security Audit Log</h2>
+      </div>
+      <button type="button" class="btn btn-sm btn-refresh" (click)="fetchHistory()" title="Refresh scan history">
+        ↻ Refresh Log
+      </button>
+    </div>
+
+    <div *ngIf="history().length === 0" class="history-empty">
+      <p>No queries recorded in SQLite database yet. Perform a scan to view audit entries.</p>
+    </div>
+
+    <div *ngIf="history().length > 0" class="table-responsive">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Scanned Query</th>
+            <th>Verdict</th>
+            <th>Confidence</th>
+            <th>Threat Level</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of history()">
+            <td class="time-col">{{ item.scannedAt | date:'HH:mm:ss' }}</td>
+            <td class="query-col">
+              <code>{{ item.query }}</code>
+            </td>
+            <td>
+              <span class="status-pill" [class.pill-malicious]="item.isSqlInjection" [class.pill-benign]="!item.isSqlInjection">
+                {{ item.label }}
+              </span>
+            </td>
+            <td class="conf-col">
+              <strong>{{ (item.confidence * 100).toFixed(1) }}%</strong>
+            </td>
+            <td>
+              <span class="risk-badge" [class.risk-high]="item.isSqlInjection" [class.risk-low]="!item.isSqlInjection">
+                {{ item.isSqlInjection ? 'Critical' : 'Safe' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>SQLShield AI &bull; Intelligent SQL Injection Defense System &bull; Angular + ASP.NET Core + FastAPI Architecture</p>
+  </footer>
+</div>

@@ -1,0 +1,6 @@
+text,note
+"SELECT email FROM customers WHERE id = 100",benign lookup
+"' OR 1=1 --",classic tautology
+"SELECT * FROM products WHERE name LIKE '%book%'",benign pattern
+"1; SELECT * FROM passwords",stacked query pattern
+"GRANT SELECT ON schema.table TO reader",benign DDL-ish

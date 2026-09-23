@@ -1,0 +1,15 @@
+@Backend_HostAddress = http://localhost:5000
+
+POST {{Backend_HostAddress}}/api/detection/analyze
+Content-Type: application/json
+
+{
+  "query": "admin' OR '1'='1"
+}
+
+###
+
+GET {{Backend_HostAddress}}/api/detection/history
+Accept: application/json
+
+###

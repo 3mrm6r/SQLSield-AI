@@ -1,0 +1,19 @@
+SQL Injection Detection - Evaluation Metrics
+============================================
+Accuracy            : 0.9955
+Precision           : 0.9978
+Recall              : 0.9899
+F1-Score            : 0.9938
+ROC-AUC             : 0.9984
+False Positive Rate : 0.0013
+False Negative Rate : 0.0101
+
+Confusion Matrix:
+  True Negatives  (TN): 3901
+  False Positives (FP): 5
+  False Negatives (FN): 23
+  True Positives  (TP): 2251
+
+Test samples            : 6180
+Total prediction time   : 0.296s
+Avg time per query      : 0.048ms
