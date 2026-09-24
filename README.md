@@ -6,9 +6,9 @@
 [![Scikit-Learn](https://img.shields.io/badge/ML-Scikit--Learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 [![Docker](https://img.shields.io/badge/Container-Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-**SQLShield AI** is an enterprise-grade, full-stack cybersecurity application designed to detect, classify, and analyze **SQL Injection (SQLi)** attacks in real-time using Machine Learning.
+**SQLShield AI** is an full-stack, full-stack cybersecurity application designed to detect, classify, and analyze **SQL Injection (SQLi)** attacks in real-time using Machine Learning.
 
-Moving beyond simple regular-expression Web Application Firewalls (WAFs), SQLShield AI uses TF-IDF n-gram feature extraction and trained Ensemble Classifiers (Random Forest / MLP) with specialized tokenization to detect both classic and heavily obfuscated SQL injection attacks.
+An ML-based alternative to fixed-rule filters, SQLShield AI uses TF-IDF n-gram feature extraction and trained compared Random Forest, MLP and Naive Bayes, and chose Random Forest with specialized tokenization to detect both classic and heavily obfuscated SQL injection attacks.
 
 ---
 
@@ -18,7 +18,7 @@ Moving beyond simple regular-expression Web Application Firewalls (WAFs), SQLShi
 - **📊 Confidence & Risk Gauge:** Displays model prediction probability with dynamic color-coded threat level indicators.
 - **🎯 One-Click Preset Payloads:** Pre-loaded test cases for auth-bypass, UNION attacks, stacked queries, blind injection, and safe queries.
 - **📜 Persistent Audit Logging:** Every scanned payload is logged with timestamp, verdict, and confidence into a SQLite database via Entity Framework Core.
-- **🧩 3-Tier Microservice Architecture:** Clean separation of concerns between presentation, business logic/gateway, and ML inference.
+- **🧩 3-service architecture:** Clean separation of concerns between presentation, business logic/gateway, and ML inference.
 - **🐳 Full Containerization:** Launch all services with a single `docker compose up` command.
 
 ---
@@ -125,7 +125,7 @@ Ensure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/SQLShield-AI.git
+git clone https://github.com/3mrm6r/SQLShield-AI.git
 cd SQLShield-AI
 
 # Build and start all 3 services
@@ -232,7 +232,7 @@ Open **http://localhost:4200** in your browser once all three services are runni
 - **Custom Tokenizer (`sqli_tokenizer`):** Uses specialized regular expression tokenization that preserves syntax-critical characters (`'`, `"`, `--`, `/*`, `;`, `#`, `=`, `(`, `)`) rather than stripping them like generic NLP tokenizers.
 - **Vectorization:** TF-IDF with unigram and bigram ranges `(1, 2)`, `min_df=5`, `max_features=2000` to capture phrases like `UNION SELECT` and `OR 1=1`.
 - **Model Evaluation:**
-  - **Random Forest:** Accuracy 100.0%, 5-Fold Cross Validation F1: 98.7%
+  - **Random Forest:** Accuracy ~99.58% accuracy, 99.43% F1 on the test set, 5-Fold Cross Validation F1: 98.7%
   - **MLP Neural Network:** 5-Fold CV F1: 97.3%
   - **Multinomial Naive Bayes:** Baseline F1: 93.3%
 
